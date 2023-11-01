@@ -1,18 +1,15 @@
-import NextAuth from "next-auth";
-import GoogleProvider from "next-auth/providers/google";
 import { connectMongoDB } from "../../../../lib/mongodb";
 import User from "../../../../models/user";
+import NextAuth from "next-auth/next";
 import CredentialsProvider from "next-auth/providers/credentials";
+import bcrypt from "bcryptjs";
 
-const handler = NextAuth({
+export const authOptions = {
     providers: [
-        GoogleProvider({
-            clientId: process.env.GOOGLE_CLIENT_ID,
-            clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-        }),
         CredentialsProvider({
             name: "credentials",
             credentials: {},
+
             async authorize(credentials) {
                 const { email, password } = credentials;
 
@@ -24,21 +21,28 @@ const handler = NextAuth({
                         return null;
                     }
 
-                    // Add your own password comparison logic here
-                    if (password !== user.password) {
+                    const passwordsMatch = await bcrypt.compare(password, user.password);
+
+                    if (!passwordsMatch) {
                         return null;
                     }
-                    return "/home";
+
+                    return user;
                 } catch (error) {
                     console.log("Error: ", error);
                 }
             },
         }),
     ],
-    pages: {
-        signIn: "/login",
+    session: {
+        strategy: "jwt",
     },
-});
+    secret: process.env.NEXTAUTH_SECRET,
+    pages: {
+        signIn: "/",
+    },
+};
+
+const handler = NextAuth(authOptions);
 
 export { handler as GET, handler as POST };
-
