@@ -1,6 +1,3 @@
-import React from 'react'
-
-
 const getTopics = async () => {
     try {
         const res = await fetch('http://localhost:3000/api/pupils', {
@@ -17,7 +14,7 @@ const getTopics = async () => {
     }
 };
 
-export default async function FilterOption() {
+export default function FilterOption() {
     const [mavzula, setMavzula] = useState([]);
 
     useEffect(() => {
